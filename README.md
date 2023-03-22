@@ -66,7 +66,82 @@ TODO: Write the project description
 </div>
 
 ### Description:
-- TODO: Write the description
+- TODO: Write the description (acho eu)
+
+### Entities, attributes and constraints:
+<ul>
+  <li><b>Login</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key</li>
+    <li><b>username</b>: varchar(32), not null, unique</li>
+    <li><b>password</b>: varchar(64), not null</li>
+  </ul>
+  <li><b>Person</b></li>
+  <ul>
+    <li><b>name</b>: varchar(256), not null</li>
+    <li><b>address</b>: varchar(256), not null</li>
+    <li><b>birthdate</b>: date, not null</li>
+  </ul>
+  <li><b>Artist</b></li>
+  <ul>
+    <li><b>artistic_name</b>: varchar(128), not null</li>
+  </ul>
+  <li><b>Publisher</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key</li>
+    <li><b>name</b>: varchar(128), not null</li>
+    <li><b>contact</b>: varchar(128), not null</li>
+  </ul>
+  <li><b>Album_Single</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key</li>
+    <li><b>title</b>: varchar(64), not null</li>
+    <li><b>release</b>: date, not null</li>
+  </ul>
+  <li><b>Song</b></li>
+  <ul>
+    <li><b>ismn</b>: bigint, primary key</li>
+    <li><b>genre</b>: varchar(16), not null</li>
+    <li><b>title</b>: varchar(64), not null</li>
+    <li><b>release</b>: date, not null</li>
+    <li><b>duration</b>: time, not null</li>
+  </ul>
+  <li><b>Consumer_Song</b></li>
+  <ul>
+    <li>weak entity</li>
+    <li><b>views</b>: smallint, not null, default 0</li>
+    <li><b>listenDate</b>: date, not null</li>
+  </ul>
+  <li><b>Playlist</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key, auto increment</li>
+    <li><b>name</b>: varchar(64), not null</li>
+    <li><b>private</b>: boolean, not null, default true</li>
+  </ul>
+  <li><b>Comment</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key, auto increment</li>
+    <li><b>content</b>: text(512), not null</li>
+    <li><b>comment_date</b>: date, not null</li>
+  </ul>
+  <li><b>Prepaid_Card</b></li>
+  <ul>
+    <li><b>id</b>: varchar(16), primary key</li>
+    <li><b>amount</b>: smallint, not null, constraint: amount = 10 | 25 | 50</li>
+  </ul>
+  <li><b>Subscription</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key, auto increment</li>
+    <li><b>plan</b>: varchar(16), not null, constraint: type = month | quarter | semester</li>
+    <li><b>start_date</b>: date, not null</li>
+    <li><b>end_date</b>: date, not null</li>
+  </ul>
+  <li><b>Payment</b></li>
+  <ul>
+    <li><b>id</b>: bigint, primary key, auto increment</li>
+    <li><b>transaction_date</b>: date, not null</li>
+  </ul>
+</ul>
 
 ## Relational data model (Physical Model):
 <div>
@@ -87,3 +162,11 @@ TODO: Write the project description
   - filiperodrigues@student.dei.uc.pt
 - Joás Davi Duarte Silva
   - **CHANGEME**
+
+<!-- Remove anchor links from h3 and h4 -->
+<script>
+  var h3 = document.getElementsByTagName("h3");
+  var h4 = document.getElementsByTagName("h4");
+  for (var i = 0; i < h3.length; i++) h3[i].removeAttribute("id");
+  for (var i = 0; i < h4.length; i++) h4[i].removeAttribute("id");
+</script>
