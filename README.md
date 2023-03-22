@@ -4,7 +4,7 @@ TODO: Write the project description
 ## Main Operations:
 <ul>
   <li>
-    <h3><b>Administrator</b></h3>
+    <h3 id=""><b>Administrator</b></h3>
     <ul>
       <li>Create artist accounts</li>
       <li>Create pre-paid cards (10, 25 or 50)</li>
