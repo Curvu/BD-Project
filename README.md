@@ -42,7 +42,7 @@ Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. S
 
 ## ER diagram (Conceptual Model):
 <div>
-  <img src="./images/conceptual.png" style="margin-bottom: -8px;">
+  <img src="./assets/images/conceptual.png" style="margin-bottom: -8px;">
   <sub><b>Figure 1:</b> Conceptual Model - <i>can be changed</i></sub>
 </div>
 
@@ -102,7 +102,7 @@ Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. S
 
 ## Relational data model (Physical Model):
 <div>
-  <img src="./images/physical.png" style="margin-bottom: -8px;">
+  <img src="./assets/images/physical.png" style="margin-bottom: -8px;">
   <sub><b>Figure 2:</b> Physical Model - <i>can be changed</i></sub>
 </div>
 
