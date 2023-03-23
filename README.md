@@ -3,10 +3,10 @@ Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. S
 
 ---
 ## Main Operations:
-- <span style="font-size:20px;">**Administrator**</span>
+- ### **Administrator**
   - Create artist accounts
   - Create pre-paid cards (10, 25 or 50)
-- <span style="font-size:20px;">**Consumer**</span>
+- ### **Consumer**
   - **Consumer w/o subscription**
     - Create their account
     - Buy a pre-paid card
@@ -23,7 +23,7 @@ Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. S
     - Access to all songs, albums and public playlists
     - Have a playlist with their top 10 most played songs (last 30 days)
     - Update and delete their account
-- <span style="font-size:20px;">**Artist**</span>
+- ### **Artist**
   - Create albums
   - Create songs
   - Update their account information
@@ -47,55 +47,55 @@ Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. S
 </div>
 
 ## Entities, attributes and constraints:
-- <span style="font-size:18px;">**Login**</span>
+- ### **Login**
   - **id**: bigint, primary key
   - **username**: varchar(32), not null, unique
   - **password**: varchar(64), not null
-- <span style="font-size:18px;">**Administrator**</span>
+- ### **Administrator**
   - *no attributes*
-- <span style="font-size:18px;">**Person**</span>
+- ### **Person**
   - **name**: varchar(256), not null
   - **address**: varchar(256), not null
   - **birthdate**: date, not null
-- <span style="font-size:18px;">**Consumer**</span>
+- ### **Consumer**
   - *no attributes*
-- <span style="font-size:18px;">**Artist**</span>
+- ### **Artist**
   - **artistic_name**: varchar(128), not null
-- <span style="font-size:18px;">**Label**</span>
+- ### **Label**
   - **id**: bigint, primary key
   - **name**: varchar(128), not null
   - **contact**: varchar(128), not null
-- <span style="font-size:18px;">**Album**</span>
+- ### **Album**
   - **id**: bigint, primary key
   - **title**: varchar(64), not null
   - **release**: date, not null
-- <span style="font-size:18px;">**Song**</span>
+- ### **Song**
   - **ismn**: bigint, primary key
   - **genre**: varchar(16), not null
   - **title**: varchar(64), not null
   - **release**: date, not null
   - **duration**: time, not null
-- <span style="font-size:18px;">**Consumer_Song**</span>
+- ### **Consumer_Song**
   - weak entity
   - **views**: smallint, not null, default 0
   - **listenDate**: date, not null
-- <span style="font-size:18px;">**Playlist**</span>
+- ### **Playlist**
   - **id**: bigint, primary key, auto increment
   - **name**: varchar(64), not null
   - **private**: boolean, not null, default true
-- <span style="font-size:18px;">**Comment**</span>
+- ### **Comment**
   - **id**: bigint, primary key, auto increment
   - **content**: text(512), not null
   - **comment_date**: date, not null
-- <span style="font-size:18px;">**Prepaid_Card**</span>
+- ### **Prepaid_Card**
   - **id**: varchar(16), primary key
   - **amount**: smallint, not null, constraint: amount = 10 | 25 | 50
-- <span style="font-size:18px;">**Subscription**</span>
+- ### **Subscription**
   - **id**: bigint, primary key, auto increment
   - **plan**: varchar(16), not null, constraint: type = month | quarter | semester
   - **start_date**: date, not null
   - **end_date**: date, not null
-- <span style="font-size:18px;">**Payment**</span>
+- ### **Payment**
   - **id**: bigint, primary key, auto increment
   - **transaction_date**: date, not null
 
