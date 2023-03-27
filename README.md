@@ -1,5 +1,5 @@
 # Oblivion Sound
-Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. Sit sit reprehenderit ea cillum deserunt reprehenderit voluptate. Esse culpa sit qui nostrud sit reprehenderit ullamco Lorem. Anim id fugiat in duis consequat consectetur duis sunt amet aliqua nulla. Ipsum ex ea ad pariatur ipsum anim consequat labore esse magna reprehenderit ex do dolor. Fugiat nostrud excepteur pariatur fugiat voluptate tempor eiusmod fugiat minim. Qui dolor consectetur nisi laboris enim culpa ex laborum.
+Our goal is to make a complete and functional database for an hypothetical application named Oblivion Sound, for the time we have designed a visual entity-relationship diagram and its attributes.  We will be using SQL as the programming language for the creation of the actual database, where we will manage the data of a music streaming service implementing the needed functionalities for it to be usable and secure.  
 
 ---
 ## Main Operations:
