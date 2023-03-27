@@ -115,7 +115,7 @@ Velit fugiat reprehenderit ullamco excepteur laboris exercitation ut culpa ad. S
 
 ## Authors:
 - André Rodrigues Bettencourt Justo Louro
-  - **CHANGEME**
+  - andrelouro02@gmail.com
 - Filipe Alexandre Rodrigues
   - filiperodrigues@student.dei.uc.pt
 - Joás Davi Duarte Silva
