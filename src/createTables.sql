@@ -28,7 +28,7 @@ CREATE TABLE credentials (
 	PRIMARY KEY (id),
 	UNIQUE (username),
 	CHECK (length(username) > 0),
-	CHECK (length(password) > 0),
+	CHECK (length(password) > 0)
 );
 
 CREATE TABLE administrator (
