@@ -41,11 +41,14 @@ CREATE TABLE person (
 	credentials_id  BIGSERIAL NOT NULL,
 	name            VARCHAR(256) NOT NULL,
 	address         VARCHAR(256) NOT NULL,
+	email            VARCHAR(128) NOT NULL,
 	birthdate       DATE NOT NULL,
 	PRIMARY KEY (credentials_id),
 	FOREIGN KEY (credentials_id) REFERENCES credentials(id),
 	CHECK (length(name) > 0),
-	CHECK (length(address) > 0)
+	CHECK (length(address) > 0),
+	CHECK (length(email) > 0),
+	UNIQUE (email)
 );
 
 CREATE TABLE label (
