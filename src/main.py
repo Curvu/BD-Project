@@ -20,14 +20,16 @@ StatusCodes = {
   'internal_error': 500
 }
 
+SecretKey = os.getenv('SECRET_KEY')
+
 ###################################################
 #               DATABASE CONNECTION               #
 ###################################################
 
 def db_connection():
   return psycopg2.connect(
-    user=os.getenv('USER'),
-    password=os.getenv('PASSWORD'),
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PASSWORD'),
     host=os.getenv('HOST'),
     port=os.getenv('DB_PORT'),
     database=os.getenv('DATABASE')
@@ -41,23 +43,31 @@ def db_connection():
 # Example endpoint default
 @app.route('/')
 def landing_page():
+  logger.info('GET /')
   return (
     """
       Hello World!
     """
   )
 
-#* POST http://localhost:8080/dbproj/user
-#? Create a consumer
-# params: {username, password, name, address, email, birthdate}
-# return: user id if success
-#? Create a Artist
-# params: {username, password, name, address, email, birthdate, label_id, artistic_name)
-# header: admin authentication token
-# return: user id if success
-#? Login a user
-# params: {username, password}
-# return: authentication token if success
+#! POST http://localhost:8080/dbproj/user
+'''
+  payload: {
+    username: string,
+    password: string,
+    name: string, (optional if login)
+    address: string, (optional if login)
+    email: string, (optional if login)
+    birthdate: string, (optional if login)
+    label_id: int, (optional if login and not artist)
+    artistic_name: string (optional if login and not artist)
+  }
+  return: {
+    status: status code,
+    results: user_id if register or token if login,
+    error: error message if error
+  }
+'''
 @app.route('/dbproj/user', methods=['POST'])
 def create_login_user():
   logger.info('POST /dbproj/user')
@@ -79,12 +89,16 @@ def create_login_user():
       cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
       results = cur.fetchone() # returns (id, username, password)
       if results is None:
+        logger.info(f'User {payload["username"]} not found')
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user not found'})
       else:
-        if bcrypt.checkpw(payload['password'].encode('utf-8'), results[2].encode('utf-8')):
-          token = jwt.encode({'id': results[0]}, os.getenv('SECRET_KEY'), algorithm='HS256')
-          response = flask.jsonify({'status': StatusCodes['success'], 'results': token.decode('utf-8')})
+        pw = results[2].encode('utf-8')
+        if bcrypt.checkpw(payload['password'].encode('utf-8'), pw):
+          logger.info(f'User {results[0]} logged in')
+          token = jwt.encode({'user_id': results[0]}, SecretKey, algorithm='HS256')
+          response = flask.jsonify({'status': StatusCodes['success'], 'results': token})
         else:
+          logger.info(f'User {results[0]} failed to login')
           response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'wrong password'})
     except (Exception, psycopg2.DatabaseError) as error:
       logger.error(str(error))
@@ -104,13 +118,14 @@ def create_login_user():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'birthdate not provided'})
     
     #* Create a user *#
-    hash = bcrypt.hashpw(payload['password'].encode('utf-8'), bcrypt.gensalt()) # hashed password
+    hash = bcrypt.hashpw(payload['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     if 'label_id' not in payload and 'artistic_name' not in payload:
       #* Consumer *#
       try:
         cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
         results = cur.fetchone() # returns (id, username, password)
         if results is not None:
+          logger.info(f'Username {payload["username"]} already in use')
           response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'username already in use'})
         else:
           cur.execute("INSERT INTO credentials (username, password) VALUES (%s, %s) RETURNING id", (payload['username'], hash))
@@ -119,8 +134,10 @@ def create_login_user():
           cur.execute("INSERT INTO person (id, name, address, email, birthdate) VALUES (%s, %s, %s, %s, %s)", values)
           cur.execute("INSERT INTO consumer (id) VALUES (%s)", (user_id, ))
           conn.commit()
+          logger.info(f'User {user_id} created')
           response = flask.jsonify({'status': StatusCodes['success'], 'results': user_id})
       except (Exception, psycopg2.DatabaseError) as error:
+        conn.rollback()
         logger.error(str(error))
         response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
       finally:
@@ -138,6 +155,7 @@ def create_login_user():
         cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
         results = cur.fetchone() # returns (id, username, password)
         if results is not None:
+          logger.info(f'Username {payload["username"]} already in use')
           response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'username already in use'})
         else:
           cur.execute("INSERT INTO credentials (username, password) VALUES (%s, %s) RETURNING id", (payload['username'], hash))
@@ -147,8 +165,10 @@ def create_login_user():
           values = (user_id, payload['label_id'], payload['artistic_name'])
           cur.execute("INSERT INTO artist (id, label_id, artistic_name) VALUES (%s, %s, %s)", values)
           conn.commit()
+          logger.info(f'User {user_id} created')
           response = flask.jsonify({'status': StatusCodes['success'], 'results': user_id})
       except (Exception, psycopg2.DatabaseError) as error:
+        conn.rollback()
         logger.error(str(error))
         response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
       finally:
