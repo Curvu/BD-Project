@@ -3,18 +3,14 @@
 ##  Filipe Rodrigues
 ##  Joás Silva
 
-# TODO: add boolean to consumer table (default: false)
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
 import flask
 import logging
 import psycopg2
-import time
-
 import jwt
+import bcrypt
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = flask.Flask(__name__)
 
@@ -53,10 +49,10 @@ def landing_page():
 
 #* POST http://localhost:8080/dbproj/user
 #? Create a consumer
-# params: {username, password, name, address, birthdate}
+# params: {username, password, name, address, email, birthdate}
 # return: user id if success
 #? Create a Artist
-# params: {username, password, name, address, birthdate, label_id, artistic_name)
+# params: {username, password, name, address, email, birthdate, label_id, artistic_name)
 # header: admin authentication token
 # return: user id if success
 #? Login a user
@@ -77,10 +73,19 @@ def create_login_user():
   if 'password' not in payload:
     return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'password not provided'})
 
-  if 'name' not in payload and 'address' not in payload and 'birthdate' not in payload:
-    #TODO: Login
+  if 'name' not in payload and 'address' not in payload and 'birthdate' not in payload and 'email' not in payload:
+    #* Login *#
     try:
-      response = flask.jsonify({'status': StatusCodes['api_error'], 'results': 'not implemented'})
+      cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
+      results = cur.fetchone() # returns (id, username, password)
+      if results is None:
+        response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user not found'})
+      else:
+        if bcrypt.checkpw(payload['password'].encode('utf-8'), results[2].encode('utf-8')):
+          token = jwt.encode({'id': results[0]}, os.getenv('SECRET_KEY'), algorithm='HS256')
+          response = flask.jsonify({'status': StatusCodes['success'], 'results': token.decode('utf-8')})
+        else:
+          response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'wrong password'})
     except (Exception, psycopg2.DatabaseError) as error:
       logger.error(str(error))
       response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
@@ -93,13 +98,28 @@ def create_login_user():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'name not provided'})
     if 'address' not in payload:
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'address not provided'})
+    if 'email' not in payload:
+      return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'email not provided'})
     if 'birthdate' not in payload:
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'birthdate not provided'})
     
+    #* Create a user *#
+    hash = bcrypt.hashpw(payload['password'].encode('utf-8'), bcrypt.gensalt()) # hashed password
     if 'label_id' not in payload and 'artistic_name' not in payload:
-      #TODO: Create a consumer
+      #* Consumer *#
       try:
-        response = flask.jsonify({'status': StatusCodes['api_error'], 'results': 'not implemented'})
+        cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
+        results = cur.fetchone() # returns (id, username, password)
+        if results is not None:
+          response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'username already in use'})
+        else:
+          cur.execute("INSERT INTO credentials (username, password) VALUES (%s, %s) RETURNING id", (payload['username'], hash))
+          user_id = cur.fetchone()[0]
+          values = (user_id, payload['name'], payload['address'], payload['email'], payload['birthdate'])
+          cur.execute("INSERT INTO person (id, name, address, email, birthdate) VALUES (%s, %s, %s, %s, %s)", values)
+          cur.execute("INSERT INTO consumer (id) VALUES (%s)", (user_id, ))
+          conn.commit()
+          response = flask.jsonify({'status': StatusCodes['success'], 'results': user_id})
       except (Exception, psycopg2.DatabaseError) as error:
         logger.error(str(error))
         response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
@@ -113,9 +133,21 @@ def create_login_user():
       if 'artistic_name' not in payload:
         return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'artistic_name not provided'})
       
-      #TODO: Create a artist
+      #* Artist *#
       try:
-        response = flask.jsonify({'status': StatusCodes['api_error'], 'results': 'not implemented'})
+        cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
+        results = cur.fetchone() # returns (id, username, password)
+        if results is not None:
+          response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'username already in use'})
+        else:
+          cur.execute("INSERT INTO credentials (username, password) VALUES (%s, %s) RETURNING id", (payload['username'], hash))
+          user_id = cur.fetchone()[0]
+          values = (user_id, payload['name'], payload['address'], payload['email'], payload['birthdate'])
+          cur.execute("INSERT INTO person (id, name, address, email, birthdate) VALUES (%s, %s, %s, %s, %s)", values)
+          values = (user_id, payload['label_id'], payload['artistic_name'])
+          cur.execute("INSERT INTO artist (id, label_id, artistic_name) VALUES (%s, %s, %s)", values)
+          conn.commit()
+          response = flask.jsonify({'status': StatusCodes['success'], 'results': user_id})
       except (Exception, psycopg2.DatabaseError) as error:
         logger.error(str(error))
         response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
