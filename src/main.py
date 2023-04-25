@@ -63,7 +63,7 @@ def landing_page():
 # params: {username, password}
 # return: authentication token if success
 @app.route('/dbproj/user', methods=['POST'])
-def create_user():
+def create_login_user():
   logger.info('POST /dbproj/user')
   payload = flask.request.get_json()
 
