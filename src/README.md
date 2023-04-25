@@ -1,6 +1,6 @@
-# Create the Database and User
+# Setting up
 
-## Creating
+## Creating the database
 First, you need to log into the postgres user. This is the default user for postgres. You can do this by running the following command:
 ```bash
 psql -h localhost -p 5432 -d postgres -U postgres
@@ -25,4 +25,10 @@ psql -h localhost -p 5432 -d obliviondb -U admin -f createTables.sql # Enter pas
 You can connect to the database using the admin user by running the following command:
 ```bash
 psql -h localhost -p 5432 -d obliviondb -U admin # Enter password when prompted
+```
+
+## Importing libraries
+You just need to run the following command:
+```bash
+pip3 install -r requirements.txt
 ```
