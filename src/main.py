@@ -176,6 +176,89 @@ def create_login_user():
           conn.close()
         return response
 
+#! POST http://localhost:8080/dbproj/song
+'''
+  headers = {
+    token: authentication token (artist)
+  }
+  payload = {
+    'title': string,
+    'release_date': 'YYYY-MM-DD',
+    'duration': 'HH:MM:SS',
+    'genre': 'genre',
+    'label_id': 'label_id',
+    'artists': ['artist_id1', 'artist_id2', ...] (optional)
+  }
+  return: {
+    'status': status_code,
+    'results': song_id if success,
+    'error': error_message if any
+  }
+'''
+@app.route('/dbproj/song', methods=['POST'])
+def create_song():
+  token = flask.request.headers.get('token')
+  payload = flask.request.get_json()
+  if token is None:
+    return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'token not provided'})
+  if payload is None:
+    return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'payload not provided'})
+
+  #* Check if token is valid *#
+  jwt.decode(token, SecretKey, algorithms=['HS256'])
+  user_id = jwt.decode(token, SecretKey, algorithms=['HS256'])['user_id']
+  logger.debug(f'User {user_id} authenticated')
+
+  #* Check if user is an artist *#
+  conn = db_connection()
+  cur = conn.cursor()
+
+  try:
+    cur.execute("SELECT * FROM artist WHERE id = %s", (user_id, ))
+    results = cur.fetchone()
+    if results is None:
+      logger.info(f'User {user_id} is not an artist')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an artist'})
+    else:
+      logger.debug(f'User {user_id} is an artist')
+      
+      #* Create song *#
+      try:
+        values = (payload['title'], payload['release_date'], payload['duration'], payload['genre'], payload['label_id'])
+        cur.execute("INSERT INTO song (title, release_date, duration, genre, label_id, album_id) VALUES (%s, %s, %s, %s, %s) RETURNING id", values)
+        song_id = cur.fetchone()[0]
+        logger.info(f'Song {song_id} created')
+        response = flask.jsonify({'status': StatusCodes['success'], 'results': song_id})
+
+        #* Add artists *#
+        # associate with artist from token
+        cur.execute("INSERT INTO song_artist (song_id, artist_id) VALUES (%s, %s)", (song_id, user_id))
+        logger.debug(f'Artist {user_id} added to song {song_id}')
+
+        # associate with artists from payload
+        if 'artists' in payload:
+          for artist_id in payload['artists']:
+            cur.execute("INSERT INTO song_artist (song_id, artist_id) VALUES (%s, %s)", (song_id, artist_id))
+            logger.debug(f'Artist {artist_id} added to song {song_id}')
+        conn.commit()
+      except (Exception, psycopg2.DatabaseError) as error:
+        conn.rollback()
+        logger.error(str(error))
+        response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
+      finally:
+        if conn is not None:
+          conn.close()
+        return response
+  except (Exception, psycopg2.DatabaseError) as error:
+    logger.error(str(error))
+    response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
+  finally:
+    if conn is not None:
+      conn.close()
+    return response
+
+
+
 
 ###################################################
 #                     MAIN                        #
