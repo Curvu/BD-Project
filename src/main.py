@@ -234,14 +234,14 @@ def create_song():
 
       #* Create song *#
       values = (payload['title'], payload['release_date'], payload['duration'], payload['genre'], payload['label_id'])
-      cur.execute("INSERT INTO song (title, release_date, duration, genre, label_id, album_id) VALUES (%s, %s, %s, %s, %s) RETURNING id", values)
+      cur.execute("INSERT INTO song (title, release_date, duration, genre, label_id, album_id) VALUES (%s, %s, %s, %s, %s) RETURNING ismn", values)
       song_id = cur.fetchone()[0]
       logger.info(f'Song {song_id} created')
       response = flask.jsonify({'status': StatusCodes['success'], 'results': song_id})
 
       #* Add artists *#
       # associate with artist from token
-      cur.execute("INSERT INTO song_artist (song_id, artist_id) VALUES (%s, %s)", (song_id, user_id))
+      cur.execute("INSERT INTO song_artist (song_ismn, artist_id) VALUES (%s, %s)", (song_id, user_id))
       logger.debug(f'Artist {user_id} added to song {song_id}')
 
       # associate with artists from payload
@@ -254,7 +254,7 @@ def create_song():
             logger.info(f'Artist {artist_id} does not exist')
             continue
 
-          cur.execute("INSERT INTO song_artist (song_id, artist_id) VALUES (%s, %s)", (song_id, artist_id))
+          cur.execute("INSERT INTO song_artist (song_ismn, artist_id) VALUES (%s, %s)", (song_id, artist_id))
           logger.debug(f'Artist {artist_id} added to song {song_id}')
       conn.commit()
       response = flask.jsonify({'status': StatusCodes['success'], 'results': song_id})
@@ -355,7 +355,7 @@ def create_album():
             logger.info(f'Song does not exist')
             continue
           # check if the artists are associated with the song
-          cur.execute("SELECT * FROM song_artist WHERE song_id = %s AND artist_id = %s", (results[0], user_id))
+          cur.execute("SELECT * FROM song_artist WHERE song_ismn = %s AND artist_id = %s", (results[0], user_id))
           results = cur.fetchone()
           if results is None:
             logger.info(f'Song does not have artist {user_id}')
@@ -363,7 +363,7 @@ def create_album():
 
           if 'other_artists' in song:
             for artist_id in song['other_artists']:
-              cur.execute("SELECT * FROM song_artist WHERE song_id = %s AND artist_id = %s", (results[0], artist_id))
+              cur.execute("SELECT * FROM song_artist WHERE song_ismn = %s AND artist_id = %s", (results[0], artist_id))
               results = cur.fetchone()
               if results is None:
                 logger.info(f'Song does not have artist {artist_id}')
@@ -374,19 +374,19 @@ def create_album():
         else:
           song_id = payload['songs'][i]
           # check this song exists
-          cur.execute("SELECT * FROM song WHERE id = %s", (song_id, ))
+          cur.execute("SELECT * FROM song WHERE ismn = %s", (song_id, ))
           if cur.fetchone() is None:
             logger.info(f'Song {song_id} does not exist')
             continue
 
           # check if this song has the token artist
-          cur.execute("SELECT * FROM song_artist WHERE song_id = %s AND artist_id = %s", (song_id, user_id))
+          cur.execute("SELECT * FROM song_artist WHERE song_ismn = %s AND artist_id = %s", (song_id, user_id))
           if cur.fetchone() is None:
             logger.info(f'Song {song_id} does not have artist {user_id}')
             continue
 
         # associate with song
-        cur.execute("INSERT album_song (album_id, song_id) VALUES (%s, %s)", (album_id, song_id))
+        cur.execute("INSERT album_song (album_id, song_ismn) VALUES (%s, %s)", (album_id, song_id))
         logger.debug(f'Song {song_id} added to album {album_id}')
       conn.commit()
       response = flask.jsonify({'status': StatusCodes['success'], 'results': album_id})
@@ -399,6 +399,75 @@ def create_album():
     return response
 
 
+#! GET http://localhost:8080/dbproj/song/{keyword}
+'''
+  header: {
+    token: auth token (consumer)
+  }
+  return: {
+    'status': status_code,
+    'results': [
+      {'title': title, 'label_id': label_id, 'artists': [artist_id, ...], 'albums': [album_id, ...]},
+      ...
+    ]
+    'error': error message
+  }
+'''
+@app.route('/dbproj/song/<keyword>', methods=['GET'])
+def get_song(keyword):
+  token = flask.request.headers.get('token')
+  if token is None:
+    return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'token not provided'})
+
+  #* Check if token is valid *#
+  jwt.decode(token, SecretKey, algorithms=['HS256'])
+  user_id = jwt.decode(token, SecretKey, algorithms=['HS256'])['user_id']
+  logger.debug(f'User {user_id} authenticated')
+
+  #* Check if user is an Consumer *#
+  conn = db_connection()
+  cur = conn.cursor()
+
+  try:
+    cur.execute("SELECT * FROM consumer WHERE id = %s", (user_id, ))
+    if cur.fetchone() is None:
+      logger.info(f'User {user_id} is not an Consumer')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an Consumer'})
+    else:
+      logger.debug(f'User {user_id} is an Consumer')
+      #* Get songs *#
+      value = '%' + keyword + '%'
+      # check title, genre, artist_name, album_name
+      query = '''
+        SELECT song.ismn, song.title, artist.artistic_name, album.id
+        FROM song
+        LEFT JOIN song_artist ON song.ismn = song_artist.song_ismn
+        LEFT JOIN artist      ON song_artist.artist_id = artist.id
+        LEFT JOIN album_song  ON song.ismn = album_song.song_ismn
+        LEFT JOIN album       ON album_song.album_id = album.id
+        WHERE song.title LIKE %s
+        GROUP BY song.ismn, artist.artistic_name, album.id
+      '''
+      cur.execute(query, (value, ))
+      results = cur.fetchall()
+      songs = {}
+      for result in results:
+        ismn, title, artist_name, album_id = result
+        if ismn not in songs: # if the song is not in the dictionary 'songs'
+          songs[ismn] = { 'title': title, 'artists': [artist_name], 'albums': [album_id] }
+        else: # if the song is in the dictionary 'songs'
+          if artist_name not in songs[ismn]['artists']:
+            songs[ismn]['artists'].append(artist_name)
+          if album_id not in songs[ismn]['albums']:
+            songs[ismn]['albums'].append(album_id)
+      response = flask.jsonify({'status': StatusCodes['success'], 'results': list(songs.values())})
+  except (Exception, psycopg2.DatabaseError) as error:
+    logger.error(str(error))
+    response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
+  finally:
+    if conn is not None:
+      conn.close()
+    return response
 
 
 ###################################################
