@@ -87,6 +87,8 @@ def song():
       conn.commit()
       response = flask.jsonify({'status': StatusCodes['success'], 'results': song_id})
   except (Exception, psycopg2.DatabaseError) as error:
+    if conn is not None:
+      conn.rollback()
     logger.error(str(error))
     response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
   finally:

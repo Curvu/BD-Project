@@ -55,6 +55,8 @@ def login():
         logger.info(f'User {results[0]} failed to login')
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'wrong password'})
   except (Exception, psycopg2.DatabaseError) as error:
+    if conn is not None:
+      conn.rollback()
     logger.error(str(error))
     response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
   finally:

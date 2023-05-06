@@ -68,7 +68,8 @@ def register():
         logger.info(f'User {user_id} created')
         response = flask.jsonify({'status': StatusCodes['success'], 'results': user_id})
     except (Exception, psycopg2.DatabaseError) as error:
-      conn.rollback()
+      if conn is not None:
+        conn.rollback()
       logger.error(str(error))
       response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
     finally:
@@ -112,7 +113,8 @@ def register():
           logger.info(f'User {user_id} created')
           response = flask.jsonify({'status': StatusCodes['success'], 'results': user_id})
     except (Exception, psycopg2.DatabaseError) as error:
-      conn.rollback()
+      if conn is not None:
+        conn.rollback()
       logger.error(str(error))
       response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
     finally:

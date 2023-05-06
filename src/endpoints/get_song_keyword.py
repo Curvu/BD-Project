@@ -52,7 +52,7 @@ def searchSong(keyword):
       value = '%' + keyword + '%'
       # check title, genre, artist_name, album_name
       query = '''
-        SELECT song.ismn, song.title, artist.artistic_name, album.id
+        SELECT song.ismn, song.title, song.label_id, artist.artistic_name, album.id
         FROM song
         LEFT JOIN song_artist ON song.ismn = song_artist.song_ismn
         LEFT JOIN artist      ON song_artist.artist_id = artist.id
@@ -65,9 +65,9 @@ def searchSong(keyword):
       results = cur.fetchall()
       songs = {}
       for result in results:
-        ismn, title, artist_name, album_id = result
+        ismn, title, label_id, artist_name, album_id = result
         if ismn not in songs: # if the song is not in the dictionary 'songs'
-          songs[ismn] = { 'title': title, 'artists': [artist_name], 'albums': [album_id] }
+          songs[ismn] = { 'title': title, 'label': label_id, 'artists': [artist_name], 'albums': [album_id] }
         else: # if the song is in the dictionary 'songs'
           if artist_name not in songs[ismn]['artists']:
             songs[ismn]['artists'].append(artist_name)
