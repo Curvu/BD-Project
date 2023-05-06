@@ -20,6 +20,9 @@ from endpoints.get_song_keyword import get_song_keyword
 from endpoints.get_artist import get_artist
 from endpoints.create_label import create_label
 from endpoints.create_album import create_album
+from endpoints.create_playlist import create_playlist
+from endpoints.play_song import play_song
+from endpoints.generate_ppc import generate_ppc
 
 app.register_blueprint(register_user, url_prefix='/dbproj/user')
 app.register_blueprint(login_user, url_prefix='/dbproj/user')
@@ -28,6 +31,9 @@ app.register_blueprint(get_song_keyword, url_prefix='/dbproj/song')
 app.register_blueprint(get_artist, url_prefix='/dbproj/artist_info')
 app.register_blueprint(create_label, url_prefix='/dbproj/label')
 app.register_blueprint(create_album, url_prefix='/dbproj/album')
+app.register_blueprint(create_playlist, url_prefix='/dbproj/playlist')
+app.register_blueprint(play_song, url_prefix='/dbproj/')
+app.register_blueprint(generate_ppc, url_prefix='/dbproj/card')
 
 @app.route('/')
 def landing_page():
