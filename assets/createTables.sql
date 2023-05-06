@@ -9,10 +9,11 @@ DROP TABLE IF EXISTS consumer_subscription;
 DROP TABLE IF EXISTS consumer_song;
 DROP TABLE IF EXISTS subscription;
 DROP TABLE IF EXISTS comment;
-DROP TABLE IF EXISTS prepaid_card;
 DROP TABLE IF EXISTS playlist;
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS song;
+DROP TABLE IF EXISTS prepaid_card_consumer;
+DROP TABLE IF EXISTS prepaid_card;
 DROP TABLE IF EXISTS consumer;
 DROP TABLE IF EXISTS artist;
 DROP TABLE IF EXISTS label;
@@ -109,16 +110,22 @@ CREATE TABLE playlist (
 	CHECK (length(name) > 0)
 );
 
-CREATE TABLE prepaid_card ( --TODO
-	id          VARCHAR(16) NOT NULL,
-	consumer_id BIGINT NOT NULL,
-	admin_id    BIGINT NOT NULL,
-	amount      SMALLINT NOT NULL DEFAULT 0,
-	limit_date  DATE NOT NULL,
-	PRIMARY KEY (id, consumer_id),
-	FOREIGN KEY (consumer_id) REFERENCES consumer(id),
+CREATE TABLE prepaid_card (
+	id       VARCHAR(16) NOT NULL,
+	admin_id BIGINT NOT NULL,
+	amount   SMALLINT NOT NULL DEFAULT 0,
+	expire   DATE NOT NULL,
+	PRIMARY KEY (id),
 	FOREIGN KEY (admin_id) REFERENCES administrator(id),
 	CHECK (length(id) > 0)
+);
+
+CREATE TABLE prepaid_card_consumer (
+	ppc_id      VARCHAR(16) NOT NULL,
+	consumer_id BIGINT NOT NULL,
+	PRIMARY KEY (ppc_id, consumer_id),
+	FOREIGN KEY (ppc_id) REFERENCES prepaid_card(id),
+	FOREIGN KEY (consumer_id) REFERENCES consumer(id)
 );
 
 CREATE TABLE comment (
@@ -171,11 +178,11 @@ CREATE TABLE album_song (
 );
 
 CREATE TABLE prepaid_card_subscription (
-	prepaid_card_id VARCHAR(16) NOT NULL,
+	ppc_id VARCHAR(16) NOT NULL,
 	consumer_id     BIGINT NOT NULL,
 	subscription_id BIGINT NOT NULL,
-	PRIMARY KEY (prepaid_card_id, consumer_id, subscription_id),
-	FOREIGN KEY (prepaid_card_id, consumer_id) REFERENCES prepaid_card(id, consumer_id),
+	PRIMARY KEY (ppc_id, consumer_id, subscription_id),
+	FOREIGN KEY (ppc_id, consumer_id) REFERENCES prepaid_card_consumer(ppc_id, consumer_id),
 	FOREIGN KEY (subscription_id) REFERENCES subscription(id)
 );
 
@@ -210,3 +217,16 @@ CREATE TABLE song_playlist (
 	FOREIGN KEY (song_ismn) REFERENCES song(ismn),
 	FOREIGN KEY (playlist_id) REFERENCES playlist(id)
 );
+
+
+-- INSERTING AN ADMINISTRATOR
+CREATE OR REPLACE FUNCTION insert_administrator(username VARCHAR(32), password VARCHAR(128)) RETURNS BIGINT AS $$
+  DECLARE
+    admin_id BIGINT;
+  BEGIN
+    INSERT INTO credentials (username, password) VALUES (username, password) RETURNING id INTO admin_id;
+    INSERT INTO administrator (id) VALUES (admin_id);
+    RETURN admin_id;
+  END;
+$$ LANGUAGE plpgsql;
+SELECT insert_administrator('admin', '$2a$12$.sRECPo6JYa5SXTClRLlUOTZ9BubhroUW9KpVwuVjHE8dvh4vquPq');

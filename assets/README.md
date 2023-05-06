@@ -25,11 +25,6 @@ psql -h localhost -p 5432 -d obliviondb -U admin -f createTables.sql # Enter pas
 You can connect to the database using the admin user by running the following command:
 ```bash
 psql -h localhost -p 5432 -d obliviondb -U admin # Enter password when prompted
-INSERT INTO credentials (username, password) VALUES ('admin', '$2a$12$.sRECPo6JYa5SXTClRLlUOTZ9BubhroUW9KpVwuVjHE8dvh4vquPq') RETURNING id;
-INSERT INTO administrator (id) VALUES (
-  # id from the previous query
-);
-\q
 ```
 
 ## Importing libraries
