@@ -52,7 +52,7 @@ CREATE TABLE person (
 );
 
 CREATE TABLE label (
-	id      BIGINT NOT NULL,
+	id      BIGSERIAL NOT NULL,
 	name    VARCHAR(128) NOT NULL,
 	contact VARCHAR(128) NOT NULL,
 	PRIMARY KEY (id),
