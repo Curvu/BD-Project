@@ -19,10 +19,12 @@ logger = logging.getLogger('api')
   }
   return: {
     'status': status_code,
-    'results': [
-      {'name': artist_name, 'songs': [song_id, ...], 'albums': [album_id, ...], 'playlists': [playlist_id, ...]},
-      ...
-    ]
+    'results': {
+      'name': artist_name,
+      'songs': [song_id, ...],
+      'albums': [album_id, ...],
+      'playlists': [playlist_id, ...]
+    },
     'error': error message
 '''
 @get_artist.route('/<artist_id>', methods=['GET'])
