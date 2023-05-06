@@ -5,7 +5,7 @@ import flask
 from flask import Blueprint
 import psycopg2
 import bcrypt
-import jwt
+from jwt import encode as jwt_encode
 
 # blueprint
 login_user = Blueprint('login', __name__)
@@ -49,7 +49,7 @@ def login():
       pw = results[2].encode('utf-8')
       if bcrypt.checkpw(payload['password'].encode('utf-8'), pw):
         logger.info(f'User {results[0]} logged in')
-        token = jwt.encode({'user_id': results[0]}, SecretKey, algorithm='HS256')
+        token = jwt_encode({'user_id': results[0]}, SecretKey, algorithm='HS256')
         response = flask.jsonify({'status': StatusCodes['success'], 'results': token})
       else:
         logger.info(f'User {results[0]} failed to login')

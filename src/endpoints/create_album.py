@@ -4,7 +4,7 @@ import logging
 import flask
 from flask import Blueprint
 import psycopg2
-import jwt
+from jwt import decode as jwt_decode
 
 # blueprint
 create_album = Blueprint('album', __name__)
@@ -45,8 +45,8 @@ def album():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': f'{field} not provided'})
 
   #* Check if token is valid *#
-  jwt.decode(token, SecretKey, algorithms=['HS256'])
-  user_id = jwt.decode(token, SecretKey, algorithms=['HS256'])['user_id']
+  jwt_decode(token, SecretKey, algorithms=['HS256'])
+  user_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
   logger.debug(f'User {user_id} authenticated')
 
     #* Check if user is an artist *#
