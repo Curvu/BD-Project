@@ -59,8 +59,8 @@ def play(song_id):
         logger.debug(f'Consumer {user_id} has played song {song_id} today')
         # increment the views of consumer_song
         cur.execute('UPDATE consumer_song SET views = views + 1 WHERE consumer_id = %s AND song_ismn = %s AND listen_date = CURRENT_DATE', (user_id, song_id))
-    conn.commit()
-    response = flask.jsonify({'status': StatusCodes['success']})
+      conn.commit()
+      response = flask.jsonify({'status': StatusCodes['success']})
   except (Exception, psycopg2.DatabaseError) as error:
     if conn is not None:
       conn.rollback()
