@@ -69,7 +69,7 @@ def playlist():
       logger.debug(f'User {user_id} is an consumer and has a subscription ongoing')
 
       #* Create playlist *#
-      cur.execute("INSERT INTO playlist (name, private) VALUES (%s, %s) RETURNING id", (payload['title'], payload['release'], visibilidade[payload['visibility']]))
+      cur.execute("INSERT INTO playlist (name, private) VALUES (%s, %s) RETURNING id", (payload['playlist_name'], visibilidade[payload['visibility']]))
       playlist_id = cur.fetchone()[0]
       logger.debug(f'Playlist {playlist_id} created')
 
@@ -77,10 +77,9 @@ def playlist():
       for song_id in payload['songs']:
         cur.execute("INSERT INTO song_playlist (playlist_id, song_ismn) VALUES (%s, %s)", (playlist_id, song_id))
         logger.debug(f'Song {song_id} added to playlist {playlist_id}')
-
       conn.commit()
-
-
+      response = flask.jsonify({'status': StatusCodes['success'], 'results': playlist_id})
+      logger.info(f'Playlist {playlist_id} created')
   except (Exception, psycopg2.DatabaseError) as error:
     if conn is not None:
       conn.rollback()
