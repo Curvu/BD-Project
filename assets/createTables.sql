@@ -142,7 +142,7 @@ CREATE TABLE comment (
 	CHECK (length(content) > 0)
 );
 
-CREATE TABLE subscription ( --TODO
+CREATE TABLE subscription (
 	id          BIGSERIAL NOT NULL,
 	plan        VARCHAR(32) NOT NULL,
 	start_date  DATE NOT NULL,
@@ -156,7 +156,6 @@ CREATE TABLE consumer_song (
 	consumer_id BIGINT NOT NULL,
 	listen_date DATE NOT NULL,
 	views       SMALLINT NOT NULL DEFAULT 0,
-	PRIMARY KEY (song_ismn, consumer_id),
 	FOREIGN KEY (song_ismn) REFERENCES song(ismn),
 	FOREIGN KEY (consumer_id) REFERENCES consumer(id)
 ); -- index on listen_date
