@@ -48,10 +48,10 @@ def reply_comment(song_id, parent_comment_id):
     cur.execute('SELECT id FROM consumer WHERE id = %s', (user_id, ))
 
     if cur.fetchone() is None: # user in not an consumer
-      logger.info(f'User {user_id} is not an consumer')
-      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an consumer'})
+      logger.info(f'User {user_id} is not a consumer')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer'})
     else: # user is a consumer
-      logger.debug(f'User {user_id} is an consumer')
+      logger.debug(f'User {user_id} is a consumer')
 
       #* Create comment *#
       query = '''

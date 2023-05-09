@@ -44,10 +44,10 @@ def searchSong(keyword):
   try:
     cur.execute("SELECT * FROM consumer WHERE id = %s", (user_id, ))
     if cur.fetchone() is None:
-      logger.info(f'User {user_id} is not an Consumer')
-      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an Consumer'})
+      logger.info(f'User {user_id} is not a consumer')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer'})
     else:
-      logger.debug(f'User {user_id} is an Consumer')
+      logger.debug(f'User {user_id} is a consumer')
       #* Get songs *#
       value = '%' + keyword + '%'
       # check title, genre, artist_name, album_name

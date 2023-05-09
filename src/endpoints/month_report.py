@@ -4,7 +4,6 @@ import logging
 import flask
 from flask import Blueprint
 import psycopg2
-import bcrypt
 from jwt import decode as jwt_decode
 
 # blueprint
@@ -54,8 +53,8 @@ def report(year_month):
     cur.execute("SELECT id FROM consumer WHERE id = %s", (user_id, ))
     results = cur.fetchone()
     if results is None:
-      logger.info(f'User {user_id} is not an consumer')
-      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an consumer'})
+      logger.info(f'User {user_id} is not a consumer')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer'})
     else:
       logger.debug(f'User {user_id} is a consumer')
 

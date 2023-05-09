@@ -43,10 +43,10 @@ def play(song_id):
     cur.execute('SELECT consumer.id FROM consumer WHERE id = %s', (user_id, ))
 
     if cur.fetchone() is None: # user in not an consumer or has no subscription
-      logger.info(f'User {user_id} is not an consumer')
-      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an consumer'})
+      logger.info(f'User {user_id} is not a consumer')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer'})
     else: 
-      logger.debug(f'User {user_id} is an consumer')
+      logger.debug(f'User {user_id} is a consumer')
 
       #* Update consumer_song *#
       # check if consumer_song has been played today

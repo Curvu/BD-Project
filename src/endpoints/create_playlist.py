@@ -63,10 +63,10 @@ def playlist():
     cur.execute(query, (user_id, ))
 
     if cur.fetchone() is None: # user in not an consumer or has no subscription
-      logger.info(f'User {user_id} is not an consumer or has no subscription')
-      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an consumer or has no subscription'})
+      logger.info(f'User {user_id} is not a consumer or does not have a subscription')
+      response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer or does not have a subscription'})
     else: 
-      logger.debug(f'User {user_id} is an consumer and has a subscription ongoing')
+      logger.debug(f'User {user_id} is a consumer and has a subscription ongoing')
 
       #* Create playlist *#
       cur.execute("INSERT INTO playlist (name, private) VALUES (%s, %s) RETURNING id", (payload['playlist_name'], visibilidade[payload['visibility']]))
