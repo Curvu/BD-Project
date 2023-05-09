@@ -73,6 +73,10 @@ def playlist():
       playlist_id = cur.fetchone()[0]
       logger.debug(f'Playlist {playlist_id} created')
 
+      #* Associate playlist with consumer *#
+      cur.execute("INSERT INTO consumer_playlist (consumer_id, playlist_id) VALUES (%s, %s)", (user_id, playlist_id))
+      logger.debug(f'Playlist {playlist_id} associated with consumer {user_id}')
+
       #* Add songs to playlist *#
       for song_id in payload['songs']:
         cur.execute("INSERT INTO song_playlist (playlist_id, song_ismn) VALUES (%s, %s)", (playlist_id, song_id))
