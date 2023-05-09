@@ -70,7 +70,7 @@ CREATE TABLE artist (
 	FOREIGN KEY (id) REFERENCES person(id),
 	FOREIGN KEY (label_id) REFERENCES label(id),
 	CHECK (length(artistic_name) > 0),
-	UNIQUE (artistic_name) --! REVIEW
+	UNIQUE (artistic_name)
 );
 
 CREATE TABLE consumer (
@@ -106,6 +106,7 @@ CREATE TABLE playlist (
 	id      BIGSERIAL NOT NULL,
 	name    VARCHAR(64) NOT NULL,
 	private BOOL NOT NULL,
+  top10   BOOL NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id),
 	CHECK (length(name) > 0)
 );
@@ -217,6 +218,33 @@ CREATE TABLE song_playlist (
 	FOREIGN KEY (playlist_id) REFERENCES playlist(id)
 );
 
+-- Trigger that creates or updates the consumer's playlist top 10 most listened songs in the last 30 days
+CREATE OR REPLACE FUNCTION top_10_playlist() RETURNS TRIGGER AS $$
+	DECLARE
+		pl_id  BIGINT;
+		song   BIGINT;
+	BEGIN
+    -- first create the playlist if it doesn't exist
+    SELECT id INTO pl_id FROM playlist WHERE top10 = TRUE;
+    IF NOT FOUND THEN
+      INSERT INTO playlist (name, private, top10) VALUES ('Top 10', TRUE, TRUE) RETURNING id INTO pl_id;
+      INSERT INTO consumer_playlist (consumer_id, playlist_id) VALUES (NEW.consumer_id, pl_id);
+    END IF;
+    -- else update the playlist
+    DELETE FROM song_playlist WHERE playlist_id = pl_id; -- delete all songs from the playlist
+    -- insert the top 10 most listened songs in the last 30 days
+    FOR song IN
+      SELECT song_ismn FROM consumer_song WHERE listen_date > NOW() - INTERVAL '30 days' ORDER BY views DESC LIMIT 10
+    LOOP
+      INSERT INTO song_playlist (song_ismn, playlist_id) VALUES (song, pl_id);
+    END LOOP;
+    RETURN NEW; -- return the new consumer_song row
+	END;
+$$ LANGUAGE plpgsql;
+
+-- The trigger is called when a consumer listens to a song
+CREATE OR REPLACE TRIGGER top_10_playlist_trigger AFTER INSERT ON consumer_song
+  FOR EACH ROW EXECUTE PROCEDURE top_10_playlist();
 
 -- INSERTING AN ADMINISTRATOR
 CREATE OR REPLACE FUNCTION insert_administrator(username VARCHAR(32), password VARCHAR(128)) RETURNS BIGINT AS $$
@@ -228,4 +256,4 @@ CREATE OR REPLACE FUNCTION insert_administrator(username VARCHAR(32), password V
     RETURN admin_id;
   END;
 $$ LANGUAGE plpgsql;
-SELECT insert_administrator('admin', '$2a$12$.sRECPo6JYa5SXTClRLlUOTZ9BubhroUW9KpVwuVjHE8dvh4vquPq');
+SELECT insert_administrator('admin', '$2a$12$.sRECPo6JYa5SXTClRLlUOTZ9BubhroUW9KpVwuVjHE8dvh4vquPq'); -- password: admin (only for testing purposes)
