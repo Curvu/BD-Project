@@ -24,6 +24,9 @@ from endpoints.create_playlist import create_playlist
 from endpoints.play_song import play_song
 from endpoints.generate_ppc import generate_ppc
 from endpoints.subscribe_premium import subscribe_premium
+from endpoints.leave_comment import leave_comment
+from endpoints.chain_comment import chain_comment
+
 
 app.register_blueprint(register_user, url_prefix='/dbproj/user')
 app.register_blueprint(login_user, url_prefix='/dbproj/user')
@@ -36,6 +39,8 @@ app.register_blueprint(create_playlist, url_prefix='/dbproj/playlist')
 app.register_blueprint(play_song, url_prefix='/dbproj/')
 app.register_blueprint(generate_ppc, url_prefix='/dbproj/card')
 app.register_blueprint(subscribe_premium, url_prefix='/dbproj/subscription')
+app.register_blueprint(leave_comment, url_prefix='/dbproj/comments/')
+app.register_blueprint(chain_comment, url_prefix='/dbproj/comments/')
 
 @app.route('/')
 def landing_page():
