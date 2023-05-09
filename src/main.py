@@ -26,7 +26,7 @@ from endpoints.generate_ppc import generate_ppc
 from endpoints.subscribe_premium import subscribe_premium
 from endpoints.leave_comment import leave_comment
 from endpoints.chain_comment import chain_comment
-
+from endpoints.month_report import month_report
 
 app.register_blueprint(register_user, url_prefix='/dbproj/user')
 app.register_blueprint(login_user, url_prefix='/dbproj/user')
@@ -41,6 +41,7 @@ app.register_blueprint(generate_ppc, url_prefix='/dbproj/card')
 app.register_blueprint(subscribe_premium, url_prefix='/dbproj/subscription')
 app.register_blueprint(leave_comment, url_prefix='/dbproj/comments/')
 app.register_blueprint(chain_comment, url_prefix='/dbproj/comments/')
+app.register_blueprint(month_report, url_prefix='/dbproj/report')
 
 @app.route('/')
 def landing_page():
