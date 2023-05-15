@@ -51,7 +51,10 @@ def artist(artist_id):
       logger.debug(f'User {user_id} is a consumer')
       #* Get artist info *#
       query = '''
-        SELECT artist.artistic_name, song.ismn, album.id, playlist.id
+        SELECT DISTINCT artist.artistic_name as artist,
+          array_agg(song.ismn) FILTER (WHERE song.ismn IS NOT NULL) as songs,
+          array_agg(album.id) FILTER (WHERE album.id IS NOT NULL) as albums,
+          array_agg(playlist.id) FILTER (WHERE playlist.id IS NOT NULL) as playlists
         FROM artist
         LEFT JOIN song_artist   ON artist.id = song_artist.artist_id
         LEFT JOIN song          ON song_artist.song_ismn = song.ismn
@@ -60,23 +63,11 @@ def artist(artist_id):
         LEFT JOIN song_playlist ON song.ismn = song_playlist.song_ismn
         LEFT JOIN playlist      ON song_playlist.playlist_id = playlist.id
         WHERE artist.id = %s
+        GROUP BY artist
       '''
       cur.execute(query, (artist_id, ))
-      results = cur.fetchall()
-      artist = {}
-      for result in results:
-        artist_name, song_id, album_id, playlist_id = result
-        if artist_name not in artist:
-          artist[artist_name] = { 'songs': [song_id], 'albums': [album_id], 'playlists': [playlist_id] }
-        else:
-          if song_id not in artist[artist_name]['songs']:
-            artist[artist_name]['songs'].append(song_id)
-          if album_id not in artist[artist_name]['albums']:
-            artist[artist_name]['albums'].append(album_id)
-          if playlist_id not in artist[artist_name]['playlists']:
-            artist[artist_name]['playlists'].append(playlist_id)
-      output = { 'name': artist_name, 'songs': artist[artist_name]['songs'], 'albums': artist[artist_name]['albums'], 'playlists': artist[artist_name]['playlists'] }
-      response = flask.jsonify({'status': StatusCodes['success'], 'results': output})
+      results = cur.fetchone()
+      response = flask.jsonify({'status': StatusCodes['success'], 'results': results})
   except (Exception, psycopg2.DatabaseError) as error:
     logger.error(str(error))
     response = flask.jsonify({'status': StatusCodes['internal_error'], 'error': str(error)})
