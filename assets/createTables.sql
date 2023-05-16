@@ -225,16 +225,23 @@ CREATE OR REPLACE FUNCTION top_10_playlist() RETURNS TRIGGER AS $$
 		song   BIGINT;
 	BEGIN
     -- first create the playlist if it doesn't exist
-    SELECT id INTO pl_id FROM playlist WHERE top10 = TRUE;
+    SELECT playlist.id INTO pl_id
+    FROM playlist
+    LEFT JOIN consumer_playlist ON playlist.id = consumer_playlist.playlist_id
+    WHERE consumer_playlist.consumer_id = NEW.consumer_id AND playlist.top10 = TRUE;
     IF NOT FOUND THEN
       INSERT INTO playlist (name, private, top10) VALUES ('Top 10', TRUE, TRUE) RETURNING id INTO pl_id;
       INSERT INTO consumer_playlist (consumer_id, playlist_id) VALUES (NEW.consumer_id, pl_id);
     END IF;
-    -- else update the playlist
+    -- delete all songs from the playlist
     DELETE FROM song_playlist WHERE playlist_id = pl_id; -- delete all songs from the playlist
+    
     -- insert the top 10 most listened songs in the last 30 days
     FOR song IN
-      SELECT song_ismn FROM consumer_song WHERE listen_date > NOW() - INTERVAL '30 days' ORDER BY views DESC LIMIT 10
+      SELECT song_ismn, SUM(views) FROM consumer_song
+      WHERE listen_date > NOW() - INTERVAL '30 days' AND consumer_id = NEW.consumer_id
+      GROUP BY song_ismn
+      ORDER BY SUM(views) DESC LIMIT 10
     LOOP
       INSERT INTO song_playlist (song_ismn, playlist_id) VALUES (song, pl_id);
     END LOOP;
@@ -243,7 +250,7 @@ CREATE OR REPLACE FUNCTION top_10_playlist() RETURNS TRIGGER AS $$
 $$ LANGUAGE plpgsql;
 
 -- The trigger is called when a consumer listens to a song
-CREATE OR REPLACE TRIGGER top_10_playlist_trigger AFTER INSERT ON consumer_song
+CREATE OR REPLACE TRIGGER top_10_playlist_trigger AFTER INSERT OR UPDATE ON consumer_song
   FOR EACH ROW EXECUTE PROCEDURE top_10_playlist();
 
 -- INSERTING AN ADMINISTRATOR
