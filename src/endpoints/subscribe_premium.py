@@ -65,6 +65,10 @@ def subscribe():
     else:
       logger.debug(f'User {user_id} is a consumer')
 
+      #* Create transaction *#
+      cur.execute('INSERT INTO transaction (transaction_date) VALUES (NOW()) RETURNING id')
+      transaction_id = cur.fetchone()[0]
+
       #* Check if user has a subscription ongoing *#
       cur.execute('''
         SELECT consumer_subscription.consumer_id, subscription.end_date
@@ -74,9 +78,9 @@ def subscribe():
       ''', (user_id, ))
 
       results = cur.fetchone()
+      start_date = None
       if results is not None: # user has a subscription ongoing
         logger.info(f'User {user_id} has a subscription ongoing')
-
         # get the last subscription end date
         query = '''
           SELECT subscription.end_date
@@ -88,38 +92,39 @@ def subscribe():
         cur.execute(query, (user_id, ))
         # start new subscription after the current one ends
         start_date = cur.fetchone()[0] + timedelta(days=1)
-        end_date = start_date + timedelta(days=valid_period[payload['period']][0])
-        cur.execute('INSERT INTO subscription (plan, start_date, end_date) VALUES (%s, %s, %s) RETURNING id', (payload['period'], start_date, end_date))
-        subscription_id = cur.fetchone()[0]
-        cur.execute('INSERT INTO consumer_subscription (consumer_id, subscription_id) VALUES (%s, %s)', (user_id, subscription_id))
-        response = flask.jsonify({'status': StatusCodes['success'], 'results': subscription_id})
       else: # user has no subscription ongoing
         logger.debug(f'User {user_id} has no subscription ongoing')
-        # start new subscription now
         start_date = datetime.now().date()
-        end_date = start_date + timedelta(days=valid_period[payload['period']][0])
-        cur.execute('INSERT INTO subscription (plan, start_date, end_date) VALUES (%s, %s, %s) RETURNING id', (payload['period'], start_date, end_date))
-        subscription_id = cur.fetchone()
-        cur.execute('INSERT INTO consumer_subscription (consumer_id, subscription_id) VALUES (%s, %s)', (user_id, subscription_id))
-        response = flask.jsonify({'status': StatusCodes['success'], 'results': subscription_id})
-      
+      end_date = start_date + timedelta(days=valid_period[payload['period']][0])
+      cur.execute('INSERT INTO subscription (plan, start_date, end_date, t_id) VALUES (%s, %s, %s, %s) RETURNING id', (payload['period'], start_date, end_date, transaction_id))
+      subscription_id = cur.fetchone()[0]
+      cur.execute('INSERT INTO consumer_subscription (consumer_id, subscription_id) VALUES (%s, %s)', (user_id, subscription_id))
+      response = flask.jsonify({'status': StatusCodes['success'], 'results': subscription_id})
+
       #* Check if the balance of the cards is enough to pay for the subscription *#
       price = valid_period[payload['period']][1]
       for card_id in payload['cards']:
-        cur.execute('SELECT amount FROM prepaid_card WHERE id = %s', (card_id, ))
-        balance = cur.fetchone()[0]
-        if balance is not None:
+        cur.execute('SELECT amount, consumer_id FROM prepaid_card WHERE id = %s', (card_id, ))
+        balance, consumer_id = cur.fetchone()
+        if (consumer_id is None):
+          cur.execute('UPDATE prepaid_card SET consumer_id = %s WHERE id = %s RETURNING consumer_id', (user_id, card_id))
+          consumer_id = cur.fetchone()[0]
+        if balance is not None and consumer_id == user_id: # card belongs to user
           # remove until the balance is 0
+          used = 0
           while balance > 0:
             price -= 1
             balance -= 1
+            used += 1
             if balance == 0 or price == 0:
+              cur.execute('INSERT INTO transaction_prepaid_card (ppc_id, t_id, amount) VALUES (%s, %s, %s)', (card_id, subscription_id, used))
               break
-          # update card balance
+          # update card balance and card
           cur.execute('UPDATE prepaid_card SET amount = %s WHERE id = %s', (balance, card_id))
           if price == 0:
             break
       if price > 0:
+        print(price, balance)
         conn.rollback()
         logger.info(f'Not enough balance in cards')
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'not enough balance in cards'})
