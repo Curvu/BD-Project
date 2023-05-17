@@ -99,16 +99,6 @@ Our goal is to make a complete and functional database for an hypothetical appli
   - **id**: bigint, primary key, auto increment
   - **transaction_date**: date, not null
 
-
-## Relational data model (Physical Model):
-<div>
-  <img src="./assets/images/physical.png" style="margin-bottom: -8px;">
-  <sub><b>Figure 2:</b> Physical Model - <i>can be changed</i></sub>
-</div>
-
-<br>
-<br>
-<br>
 <br>
 <br>
 
