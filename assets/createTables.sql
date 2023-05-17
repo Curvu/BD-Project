@@ -3,17 +3,17 @@ DROP TABLE IF EXISTS song_playlist;
 DROP TABLE IF EXISTS consumer_playlist;
 DROP TABLE IF EXISTS song_artist;
 DROP TABLE IF EXISTS album_artist;
-DROP TABLE IF EXISTS prepaid_card_subscription;
-DROP TABLE IF EXISTS album_song;
 DROP TABLE IF EXISTS consumer_subscription;
-DROP TABLE IF EXISTS consumer_song;
+DROP TABLE IF EXISTS transaction_prepaid_card;
 DROP TABLE IF EXISTS subscription;
+DROP TABLE IF EXISTS transaction;
+DROP TABLE IF EXISTS prepaid_card;
+DROP TABLE IF EXISTS album_song;
+DROP TABLE IF EXISTS consumer_song;
 DROP TABLE IF EXISTS comment;
 DROP TABLE IF EXISTS playlist;
 DROP TABLE IF EXISTS album;
 DROP TABLE IF EXISTS song;
-DROP TABLE IF EXISTS prepaid_card_consumer;
-DROP TABLE IF EXISTS prepaid_card;
 DROP TABLE IF EXISTS consumer;
 DROP TABLE IF EXISTS artist;
 DROP TABLE IF EXISTS label;
@@ -112,21 +112,15 @@ CREATE TABLE playlist (
 );
 
 CREATE TABLE prepaid_card (
-	id       VARCHAR(16) NOT NULL,
-	admin_id BIGINT NOT NULL,
-	amount   SMALLINT NOT NULL DEFAULT 0,
-	expire   DATE NOT NULL,
+	id          VARCHAR(16) NOT NULL,
+	admin_id    BIGINT NOT NULL,
+	amount      SMALLINT NOT NULL DEFAULT 0,
+	expire      DATE NOT NULL,
+  consumer_id BIGINT,
 	PRIMARY KEY (id),
 	FOREIGN KEY (admin_id) REFERENCES administrator(id),
+  FOREIGN KEY (consumer_id) REFERENCES consumer(id),
 	CHECK (length(id) > 0)
-);
-
-CREATE TABLE prepaid_card_consumer (
-	ppc_id      VARCHAR(16) NOT NULL,
-	consumer_id BIGINT NOT NULL,
-	PRIMARY KEY (ppc_id, consumer_id),
-	FOREIGN KEY (ppc_id) REFERENCES prepaid_card(id),
-	FOREIGN KEY (consumer_id) REFERENCES consumer(id)
 );
 
 CREATE TABLE comment (
@@ -143,12 +137,28 @@ CREATE TABLE comment (
 	CHECK (length(content) > 0)
 );
 
+CREATE TABLE transaction (
+	id                BIGSERIAL NOT NULL,
+	transaction_date  DATE NOT NULL,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE transaction_prepaid_card (
+	t_id    BIGINT NOT NULL,
+	ppc_id  VARCHAR(16) NOT NULL,
+	amount  SMALLINT NOT NULL,
+	FOREIGN KEY (ppc_id) REFERENCES prepaid_card(id),
+  FOREIGN KEY (t_id) REFERENCES transaction(id)
+);
+
 CREATE TABLE subscription (
 	id          BIGSERIAL NOT NULL,
 	plan        VARCHAR(32) NOT NULL,
 	start_date  DATE NOT NULL,
 	end_date    DATE NOT NULL,
+	t_id        BIGINT NOT NULL,
 	PRIMARY KEY (id),
+  FOREIGN KEY (t_id) REFERENCES transaction(id),
 	CHECK (length(plan) > 0)
 );
 
@@ -159,7 +169,7 @@ CREATE TABLE consumer_song (
 	views       SMALLINT NOT NULL DEFAULT 0,
 	FOREIGN KEY (song_ismn) REFERENCES song(ismn),
 	FOREIGN KEY (consumer_id) REFERENCES consumer(id)
-); -- index on listen_date
+);
 
 CREATE TABLE consumer_subscription (
 	consumer_id     BIGINT NOT NULL,
@@ -175,15 +185,6 @@ CREATE TABLE album_song (
 	PRIMARY KEY (album_id, song_ismn),
 	FOREIGN KEY (album_id) REFERENCES album(id),
 	FOREIGN KEY (song_ismn) REFERENCES song(ismn)
-);
-
-CREATE TABLE prepaid_card_subscription (
-	ppc_id VARCHAR(16) NOT NULL,
-	consumer_id     BIGINT NOT NULL,
-	subscription_id BIGINT NOT NULL,
-	PRIMARY KEY (ppc_id, consumer_id, subscription_id),
-	FOREIGN KEY (ppc_id, consumer_id) REFERENCES prepaid_card_consumer(ppc_id, consumer_id),
-	FOREIGN KEY (subscription_id) REFERENCES subscription(id)
 );
 
 CREATE TABLE album_artist (
