@@ -53,13 +53,12 @@ def searchSong(keyword):
       # check title, genre, artist_name, album_name
       query = '''
         SELECT song.ismn, song.title as title, song.label_id as label,
-          array_agg(artist.artistic_name) as artists,
-          array_agg(album.id) FILTER (WHERE album.id IS NOT NULL) as albums
+          array_agg(DISTINCT artist.artistic_name) as artists,
+          array_agg(DISTINCT album_song.album_id) FILTER (WHERE album_song.album_id IS NOT NULL) as albums
         FROM song
         LEFT JOIN song_artist ON song.ismn = song_artist.song_ismn
         LEFT JOIN artist      ON song_artist.artist_id = artist.id
         LEFT JOIN album_song  ON song.ismn = album_song.song_ismn
-        LEFT JOIN album       ON album_song.album_id = album.id
         WHERE song.title LIKE %s
         GROUP BY song.ismn, song.title, song.label_id
       '''

@@ -54,14 +54,13 @@ def artist(artist_id):
         SELECT DISTINCT artist.artistic_name as artist,
           array_agg(song.ismn) FILTER (WHERE song.ismn IS NOT NULL) as songs,
           array_agg(DISTINCT album.id) FILTER (WHERE album.id IS NOT NULL) as albums,
-          array_agg(DISTINCT playlist.id) FILTER (WHERE playlist.id IS NOT NULL) as playlists
+          array_agg(DISTINCT song_playlist.playlist_id) FILTER (WHERE song_playlist.playlist_id IS NOT NULL) as playlists
         FROM artist
         LEFT JOIN song_artist   ON artist.id = song_artist.artist_id
         LEFT JOIN song          ON song_artist.song_ismn = song.ismn
         LEFT JOIN album_song    ON song.ismn = album_song.song_ismn
         LEFT JOIN album         ON album_song.album_id = album.id
         LEFT JOIN song_playlist ON song.ismn = song_playlist.song_ismn
-        LEFT JOIN playlist      ON song_playlist.playlist_id = playlist.id
         WHERE artist.id = %s
         GROUP BY artist
       '''
