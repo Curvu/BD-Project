@@ -46,7 +46,6 @@ def generate():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': f'{field} not provided'})
 
   #* Check if token is valid *#
-  jwt_decode(token, SecretKey, algorithms=['HS256'])
   user_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
   logger.debug(f'User {user_id} authenticated')
 

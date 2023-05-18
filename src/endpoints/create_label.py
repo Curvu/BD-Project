@@ -39,7 +39,6 @@ def label():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': f'{field} not provided'})
 
   #* Check if token is valid *#
-  jwt_decode(token, SecretKey, algorithms=['HS256'])
   admin_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
   logger.debug(f'Admin {admin_id} creating label')
 

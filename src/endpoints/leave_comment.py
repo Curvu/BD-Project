@@ -36,18 +36,17 @@ def comment(song_id):
     return flask.jsonify({'status': StatusCodes['api_error', 'error': 'comment not provided']})
 
   #* Check if token is valid *#
-  jwt_decode(token, SecretKey, algorithms=['HS256'])
   user_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
   logger.debug(f'User {user_id} authenticated')
 
-  #* Check if user is an consumer *#
+  #* Check if user is a consumer *#
   conn = Database().connect()
   cur = conn.cursor()
 
   try:
     cur.execute('SELECT id FROM consumer WHERE id = %s', (user_id, ))
 
-    if cur.fetchone() is None: # user in not an consumer
+    if cur.fetchone() is None: # user in not a consumer
       logger.info(f'User {user_id} is not a consumer')
       response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer'})
     else: # user is a consumer

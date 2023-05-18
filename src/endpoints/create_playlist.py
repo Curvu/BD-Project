@@ -44,11 +44,10 @@ def playlist():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': f'{field} not provided'})
 
   #* Check if token is valid *#
-  jwt_decode(token, SecretKey, algorithms=['HS256'])
   user_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
   logger.debug(f'User {user_id} authenticated')
 
-  #* Check if user is an consumer and has a subscription ongoing *#
+  #* Check if user is a consumer and has a subscription ongoing *#
   conn = Database().connect()
   cur = conn.cursor()
 
@@ -62,7 +61,7 @@ def playlist():
     '''
     cur.execute(query, (user_id, ))
 
-    if cur.fetchone() is None: # user in not an consumer or has no subscription
+    if cur.fetchone() is None: # user in not a consumer or has no subscription
       logger.info(f'User {user_id} is not a consumer or does not have a subscription')
       response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer or does not have a subscription'})
     else: 

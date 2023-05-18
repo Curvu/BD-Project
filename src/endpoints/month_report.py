@@ -36,16 +36,15 @@ def report(year_month):
   if (len(year_month) != 7 and len(year_month) != 6) or year_month[4] != '-' or not year_month[:4].isdigit() or not year_month[5:].isdigit():
     return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'invalid year-month format'})
 
-  # append '-01' to year_month
+  # append '-01' to year_month (first day of the month)
   year_month += '-01'
 
 
   #* Check if token is valid *#
-  jwt_decode(token, SecretKey, algorithms=['HS256'])
   user_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
   logger.debug(f'User {user_id} authenticated')
 
-  #* Check if user is an consumer *#
+  #* Check if user is a consumer *#
   conn = Database().connect()
   cur = conn.cursor()
 

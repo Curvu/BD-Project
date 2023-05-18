@@ -87,7 +87,6 @@ def register():
       return flask.jsonify({'status': StatusCodes['api_error'], 'error': 'token not provided'})
     
     #* Check if token is valid *#
-    jwt_decode(token, SecretKey, algorithms=['HS256'])
     admin_id = jwt_decode(token, SecretKey, algorithms=['HS256'])['user_id']
     #* Artist *#
     try:
