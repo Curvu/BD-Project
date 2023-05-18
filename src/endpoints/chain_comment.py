@@ -52,6 +52,9 @@ def reply_comment(song_id, parent_comment_id):
     else: # user is a consumer
       logger.debug(f'User {user_id} is a consumer')
 
+      # block the parent comment so that no one can delete it while we are replying to it
+      cur.execute('LOCK TABLE comment IN ACCESS EXCLUSIVE MODE')
+
       #* Create comment *#
       query = '''
         INSERT INTO comment (song_ismn, consumer_id, content, parent_id, comment_date)

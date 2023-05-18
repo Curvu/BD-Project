@@ -53,6 +53,10 @@ def label():
       response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an Admin'})
     else:
       logger.debug(f'User {admin_id} is an Admin')
+
+      # lock label table for insertion but allow reading
+      cur.execute('LOCK TABLE label IN ACCESS EXCLUSIVE MODE')
+
       #* Create label *#
       query = '''
         INSERT INTO label (name, contact)

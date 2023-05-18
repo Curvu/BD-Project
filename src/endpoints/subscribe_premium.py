@@ -56,6 +56,7 @@ def subscribe():
   cur = conn.cursor()
 
   try:
+
     cur.execute("SELECT * FROM consumer WHERE id = %s", (user_id, ))
     results = cur.fetchone()
     if results is None:
@@ -63,6 +64,9 @@ def subscribe():
       response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not a consumer'})
     else:
       logger.debug(f'User {user_id} is a consumer')
+
+      # lock tables transaction, prepaid_card in exclusive mode
+      cur.execute('LOCK TABLE transaction, prepaid_card IN EXCLUSIVE MODE')
 
       #* Create transaction *#
       cur.execute('INSERT INTO transaction (transaction_date) VALUES (NOW()) RETURNING id')

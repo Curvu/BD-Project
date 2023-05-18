@@ -52,6 +52,9 @@ def comment(song_id):
     else: # user is a consumer
       logger.debug(f'User {user_id} is a consumer')
 
+      # lock comment table for insertion and update but allow reading
+      cur.execute('LOCK TABLE comment IN ACCESS EXCLUSIVE MODE')
+
       #* Create comment *#
       query = '''
         INSERT INTO comment (song_ismn, consumer_id, content, comment_date)

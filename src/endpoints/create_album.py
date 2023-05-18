@@ -61,6 +61,9 @@ def album():
     else:
       logger.debug(f'User {user_id} is an artist')
 
+      # lock album table for insertion but allow reading
+      cur.execute('LOCK TABLE album IN ACCESS EXCLUSIVE MODE')
+
       #* Create album *#
       values = (payload['title'], payload['release'], payload['label_id'])
       cur.execute("INSERT INTO album (title, release, label_id) VALUES (%s, %s, %s) RETURNING id", values)

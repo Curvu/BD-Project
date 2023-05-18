@@ -59,6 +59,9 @@ def song():
     else:
       logger.debug(f'User {user_id} is an artist')
 
+      # lock artist table (prevent same artist from being added twice)
+      cur.execute("LOCK TABLE artist IN EXCLUSIVE MODE")
+
       #* Create song *#
       values = (payload['title'], payload['release'], payload['duration'], payload['genre'], payload['label_id'])
       cur.execute("INSERT INTO song (title, release, duration, genre, label_id) VALUES (%s, %s, %s, %s, %s) RETURNING ismn", values)

@@ -59,6 +59,9 @@ def register():
         logger.info(f'Username {payload["username"]} already in use')
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'username already in use'})
       else:
+        # block credentials table for exclusive access 
+        cur.execute("LOCK TABLE credentials IN ACCESS EXCLUSIVE MODE")
+
         cur.execute("INSERT INTO credentials (username, password) VALUES (%s, %s) RETURNING id", (payload['username'], hash))
         user_id = cur.fetchone()[0]
         values = (user_id, payload['name'], payload['address'], payload['email'], payload['birthdate'])
@@ -96,6 +99,9 @@ def register():
         logger.info(f'User {admin_id} is not an administrator')
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an administrator'})
       else:
+        # block credentials table for exclusive access 
+        cur.execute("LOCK TABLE credentials IN ACCESS EXCLUSIVE MODE")
+
         cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
         results = cur.fetchone() # returns (id, username, password)
         if results is not None:
