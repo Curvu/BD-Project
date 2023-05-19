@@ -65,8 +65,11 @@ def subscribe():
     else:
       logger.debug(f'User {user_id} is a consumer')
 
-      # lock tables transaction, prepaid_card in exclusive mode
-      cur.execute('LOCK TABLE transaction, prepaid_card IN EXCLUSIVE MODE')
+      # lock tables transaction in exclusive mode
+      cur.execute('LOCK TABLE transaction IN EXCLUSIVE MODE')
+
+      # Select cards for update
+      cur.execute('SELECT id FROM prepaid_card WHERE id = ANY(%s) FOR UPDATE', (payload['cards'], ))
 
       #* Create transaction *#
       cur.execute('INSERT INTO transaction (transaction_date) VALUES (NOW()) RETURNING id')
