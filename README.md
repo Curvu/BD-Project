@@ -5,39 +5,27 @@ Our goal is to make a complete and functional database for an hypothetical appli
 ## Main Operations:
 - ### **Administrator**
   - Create artist accounts
-  - Create pre-paid cards (10, 25 or 50)
+  - Create a specific number of pre-paid cards (10, 25 or 50)
+  - Create labels
 - ### **Consumer**
-  - **Consumer w/o subscription**
-    - Create their account
-    - Buy a pre-paid card
-    - Buy a subscription (month, quarter or semester)
+  - Create their account
+  - Buy a subscription (month, quarter or semester) using pre-paid cards
+  - Have a playlist with their top 10 most played songs (last 30 days)
+  - Comment on songs or on another comments
+  - Access to all songs, albums and public playlists
   - **Consumer w/ subscription**
     - Create playlists (public or private)
-    - Add songs to their playlists
-    - Remove songs from their playlists
-    - Access their private playlists
-    - Update their playlist name
-    - Delete their playlists
-  - **Both**
-    - Comment on songs or on another comments
-    - Access to all songs, albums and public playlists
-    - Have a playlist with their top 10 most played songs (last 30 days)
-    - Update and delete their account
 - ### **Artist**
   - Create albums
   - Create songs
-  - Update their account information
 
 
 ## Potential concurrency conflicts:
-- Creating a new account:
-  - The same username can't be used twice
-- Simultaneous comments:
-  - Multiple comments at the same time can cause the comments to be out of order or to be with the wrong content
-- Simultaneous subscriptions and pre-paid cards
-- Simultaneous playlist creation, update and deletion
-- Simultaneous song creation, update and deletion
-- Simultaneous album creation, update and deletion
+- Creating a new account using the same username at the same time
+- Simultaneous comments on the same song/comment
+- Same consumer subscribing to a plan using the same pre-paid cards
+- Creating a new album
+- Creating a new song with the same artists
 
 
 ## ER diagram (Conceptual Model):
@@ -47,57 +35,72 @@ Our goal is to make a complete and functional database for an hypothetical appli
 </div>
 
 ## Entities, attributes and constraints:
-- ### **Login**
-  - **id**: bigint, primary key
+- ### **Credentials**
+  - **id**: bigserial, primary key
   - **username**: varchar(32), not null, unique
-  - **password**: varchar(64), not null
+  - **password**: varchar(128), not null
 - ### **Administrator**
-  - *no attributes*
+  - **id**: bigint, primary key (fk to Credentials)
 - ### **Person**
+  - **id**: bigint, primary key (fk to Credentials)
   - **name**: varchar(256), not null
   - **address**: varchar(256), not null
+  - **email**: varchar(128), not null, unique
   - **birthdate**: date, not null
 - ### **Consumer**
-  - *no attributes*
+  - **id**: bigint, primary key (fk to Person)
 - ### **Artist**
-  - **artistic_name**: varchar(128), not null
+  - **id**: bigint, primary key (fk to Person)
+  - **artistic_name**: varchar(128), not null, unique
+  - **label_id**: bigint, fk to Label
 - ### **Label**
-  - **id**: bigint, primary key
-  - **name**: varchar(128), not null
+  - **id**: bigserial, primary key
+  - **name**: varchar(128), not null, unique
   - **contact**: varchar(128), not null
 - ### **Album**
-  - **id**: bigint, primary key
+  - **id**: bigserial, primary key
   - **title**: varchar(64), not null
   - **release**: date, not null
+  - **label_id**: bigint, fk to Label
 - ### **Song**
-  - **ismn**: bigint, primary key
+  - **ismn**: bigserial, primary key
+  - **label_id**: bigint, fk to Label
   - **genre**: varchar(16), not null
   - **title**: varchar(64), not null
   - **release**: date, not null
-  - **duration**: time, not null
+  - **duration**: timestamp, not null
 - ### **Consumer_Song**
-  - weak entity
+  - **consumer_id**: bigint, fk to Consumer
+  - **song_ismn**: bigint, fk to Song
   - **views**: smallint, not null, default 0
-  - **listenDate**: date, not null
+  - **listen_date**: date, not null
 - ### **Playlist**
-  - **id**: bigint, primary key, auto increment
+  - **id**: bigserial, primary key
   - **name**: varchar(64), not null
-  - **private**: boolean, not null, default true
+  - **private**: bool, not null
+  - **top10**: bool, not null, default false
 - ### **Comment**
-  - **id**: bigint, primary key, auto increment
-  - **content**: text(512), not null
+  - **id**: bigserial, primary key
+  - **content**: text, not null
   - **comment_date**: date, not null
+  - **parent_id**: bigint, fk to Comment
+  - **consumer_id**: bigint, fk to Consumer
+  - **song_ismn**: bigint, fk to Song
 - ### **Prepaid_Card**
   - **id**: varchar(16), primary key
   - **amount**: smallint, not null, constraint: amount = 10 | 25 | 50
+  - **admin_id**: bigint, not null, fk to Administrator
+  - **expire**: date, not null
+  - **consumer_id**: bigint, fk to Consumer
+- ### **Transaction**
+  - **id**: bigserial, primary key
+  - **transaction_date**: date, not null
 - ### **Subscription**
-  - **id**: bigint, primary key, auto increment
-  - **plan**: varchar(16), not null, constraint: type = month | quarter | semester
+  - **id**: bigserial, primary key
+  - **plan**: varchar(32), not null, constraint: type = month | quarter | semester
   - **start_date**: date, not null
   - **end_date**: date, not null
-- ### **Payment**
-  - **id**: bigint, primary key, auto increment
-  - **transaction_date**: date, not null
+  - **t_id**: bigint, fk to Transaction
 
 <br>
 <br>
@@ -109,4 +112,4 @@ Our goal is to make a complete and functional database for an hypothetical appli
 - Filipe Alexandre Rodrigues
   - filiperodrigues@student.dei.uc.pt
 - Joás Davi Duarte Silva
-  - **CHANGEME**
+  - joassilva@student.dei.uc.pt
