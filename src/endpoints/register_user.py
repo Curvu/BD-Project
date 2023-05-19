@@ -100,7 +100,7 @@ def register():
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'user is not an administrator'})
       else:
         # block credentials table for exclusive access 
-        cur.execute("LOCK TABLE credentials IN ACCESS EXCLUSIVE MODE")
+        cur.execute("LOCK TABLE credentials, person IN ACCESS EXCLUSIVE MODE")
 
         cur.execute("SELECT * FROM credentials WHERE username = %s", (payload['username'], ))
         results = cur.fetchone() # returns (id, username, password)
