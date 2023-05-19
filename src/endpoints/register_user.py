@@ -60,7 +60,7 @@ def register():
         response = flask.jsonify({'status': StatusCodes['api_error'], 'error': 'username already in use'})
       else:
         # block credentials table for exclusive access 
-        cur.execute("LOCK TABLE credentials IN ACCESS EXCLUSIVE MODE")
+        cur.execute("LOCK TABLE credentials, person IN ACCESS EXCLUSIVE MODE")
 
         cur.execute("INSERT INTO credentials (username, password) VALUES (%s, %s) RETURNING id", (payload['username'], hash))
         user_id = cur.fetchone()[0]
