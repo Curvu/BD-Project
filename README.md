@@ -103,8 +103,6 @@ Our goal is to make a complete and functional database for an hypothetical appli
   - **t_id**: bigint, fk to Transaction
 
 <br>
-<br>
-
 
 ## Authors:
 - André Rodrigues Bettencourt Justo Louro
@@ -113,3 +111,6 @@ Our goal is to make a complete and functional database for an hypothetical appli
   - filiperodrigues@student.dei.uc.pt
 - Joás Davi Duarte Silva
   - joassilva@student.dei.uc.pt
+
+## Grade
+- 6.95 / 9
