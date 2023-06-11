@@ -113,4 +113,4 @@ Our goal is to make a complete and functional database for an hypothetical appli
   - joassilva@student.dei.uc.pt
 
 ## Grade
-- 6.95 / 9
+- 6.95 / 8
